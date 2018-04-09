@@ -17,7 +17,6 @@ public class PlayerController : MonoBehaviour {
 	public Flashlight flashlight;
 
 	bool facingRight = true;
-	Vector2 lookDir; // direction player was last looking
 
 	// Use this for initialization
 	void Start () {
@@ -25,8 +24,6 @@ public class PlayerController : MonoBehaviour {
 		anim = GetComponent<Animator> ();
 		sr = GetComponent<SpriteRenderer> ();
 		flashlight = GetComponentInChildren<Flashlight> ();
-
-		lookDir = Vector2.right;
 	}
 	
 	// Update is called once per frame
@@ -40,11 +37,10 @@ public class PlayerController : MonoBehaviour {
 
 		Move (movement);
 
-		// set lookdir, flashlight direction and running state only if player is moving
+		// set flashlight direction and running state only if player is moving
 		if (!rb2d.velocity.Equals (Vector2.zero))
 		{
-			lookDir = movement;
-			flashlight.SetDirection (lookDir);
+			flashlight.SetDirection (movement);
 			running = true;
 		}
 		else
@@ -90,6 +86,7 @@ public class PlayerController : MonoBehaviour {
 
 	public bool LookingAtPicture()
 	{
+		Vector2 lookDir = (Vector2)(flashlight.transform.rotation * Vector2.forward); // Get lookDir from flashlight, since it is always pointed in direction player is looking
 		RaycastHit2D hit = Physics2D.Raycast (transform.position, lookDir.normalized, 1f, pictureLayer);
 		if (hit.collider != null)
 		{

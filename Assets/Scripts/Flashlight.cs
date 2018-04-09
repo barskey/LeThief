@@ -7,7 +7,7 @@ public class Flashlight : MonoBehaviour {
 	[HideInInspector]
 	public Light lightComp;
 
-	public bool isOn = false;
+	public bool isOn = false; // convenience for player/guard to check state
 
 	void Awake()
 	{
@@ -24,6 +24,6 @@ public class Flashlight : MonoBehaviour {
 
 	public void SetDirection(Vector2 dir)
 	{
-		transform.localRotation = Quaternion.LookRotation (new Vector3 (dir.x, dir.y), Vector3.forward);
+		transform.rotation = Quaternion.LookRotation (new Vector3 (dir.x, dir.y), Vector3.forward);
 	}
 }

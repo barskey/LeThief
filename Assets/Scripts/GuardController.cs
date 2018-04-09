@@ -29,7 +29,7 @@ public class GuardController : MonoBehaviour {
 		patrol,
 		alert,
 		chase
-	}
+	} // added none behavior for use in prevState so first time thru will enter patrolEnter
 
 	Behavior guardState;
 	Behavior prevState;
@@ -46,7 +46,6 @@ public class GuardController : MonoBehaviour {
 		emote = transform.Find ("GuardState").GetComponent<SpriteRenderer> ();
 		player = GameObject.FindGameObjectWithTag ("Player");
 
-		lookDir = Vector2.right;
 		guardState = Behavior.patrol;
 	}
 
@@ -103,13 +102,18 @@ public class GuardController : MonoBehaviour {
 		Move (walkSpeed);
 		float dist = Vector2.Distance (moveTo, (Vector2)transform.position);
 
-		if (SeesPlayer ()) {
+		if (SeesPlayer ())
+		{
 			prevState = guardState;
 			guardState = Behavior.chase;
-		} else if (HearsPlayer ()) {
+		}
+		else if (HearsPlayer ())
+		{
 			prevState = guardState;
 			guardState = Behavior.alert;
-		} else if (dist < 0.01f) { // if guard has reached patrol point
+		}
+		else if (dist < 0.01f) // if guard has reached patrol point
+		{
 			patrolIndex++; // get next point index
 			if (patrolIndex >= points.Length) // reset index to first point if at the end
 				patrolIndex = 0;
@@ -118,6 +122,7 @@ public class GuardController : MonoBehaviour {
 	}
 
 	float waitedSecs;
+	Vector3 lastHeard;
 	void AlertEnter()
 	{
 		Debug.Log ("AlertEnter");
@@ -129,9 +134,35 @@ public class GuardController : MonoBehaviour {
 		emote.sprite = alertEmote;
 		emote.enabled = true;
 
+		// TODO play "Hmmm?" or "What's that?" sound
+
 		waitedSecs = 0f; // reset time have waited so far
 
-		// TODO play "Hmmm?" or "What's that?" sound
+		lastHeard = player.transform.position; // save location sound was heard
+		float angleToPlayer = Vector3.Angle (transform.position, player.transform.position);
+		Vector3 newRotate = new Vector3 (flashlight.transform.eulerAngles.x,
+										flashlight.transform.eulerAngles.y,
+										angleToPlayer
+		); // make vector3 of new angles
+
+		// guard will look in direction he heard sound, then scan back and forth
+		// by seeAngleHalf to look for player. totSearhTime is split so each
+		// pause will last 1/4 of total time.
+		
+		// set up look sequence for panning back and forth
+		Sequence lookSeq = DOTween.Sequence ();
+		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight in direction last heard
+		lookSeq.AppendInterval (totSearchTime / 4); // add pause
+		newRotate.z += seeAngleHalf;
+		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight to right
+		lookSeq.AppendInterval (totSearchTime / 4); // add pause
+		newRotate.z -= seeAngleHalf * 2;
+		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight to left
+		lookSeq.AppendInterval (totSearchTime / 4); // add pause
+		newRotate.z = angleToPlayer;
+		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight back to direction last heard
+		lookSeq.AppendInterval (totSearchTime / 4); // add pause
+		lookSeq.Play (); // start the tween sequence
 
 		guardState = Behavior.alert; // go to alert update
 	}
@@ -141,20 +172,20 @@ public class GuardController : MonoBehaviour {
 		//Debug.Log ("AlertUpdate");
 		// Look around
 		// Enter Chase if sees player, otherwise return to patrol
-		// maybe turn on light first?
-
-		// use 1/4 of totSearch time to search in each of 4 directions
-		// TODO Pick the direction closest to the current lookDir to start
-		if (waitedSecs < (totSearchTime / 4) * 1) {
-			DOTween.To (() => lookDir, x => lookDir = x, Vector2.left, waitedSecs / 4);
-		}
-
-		if (SeesPlayer ()) {
+		
+		if (SeesPlayer ())
+		{
 			prevState = guardState;
 			guardState = Behavior.chase;
-		} else if (HearsPlayer ()) {
+		}
+		else if (HearsPlayer ())
+		{
 			prevState = Behavior.none; // set to none so guard re-enters alert state to start over
 			guardState = Behavior.alert;
+		}
+		else if (waitedSecs > totSearchTime) // nothing heard or seen so...
+		{
+			guardState = Behavior.patrol; // ...go back to patrol
 		}
 	}
 
@@ -179,7 +210,8 @@ public class GuardController : MonoBehaviour {
 
 	bool SeesPlayer()
 	{
-		// find the angle between player and lookDir to see if within cone of vision
+		// find the angle between player and direction guard is looking to see if within cone of vision
+		Vector2 lookDir = (Vector2)(flashlight.transform.localRotation * Vector3.forward); // use flashlight direction as direction guard is looking
 		Vector2 playerDir = (Vector2)player.transform.position - (Vector2)transform.position;
 		float playerAngle = Vector2.Angle (lookDir, playerDir);
 
@@ -187,9 +219,11 @@ public class GuardController : MonoBehaviour {
 		float playerDist = Vector3.Distance (player.transform.position, transform.position);
 
 		// if player could be seen, check if there are obstacles (walls) between
-		if (playerAngle <= seeAngleHalf && playerDist <= seeDist) {
+		if (playerAngle <= seeAngleHalf && playerDist <= seeDist)
+		{
 			RaycastHit2D hit = Physics2D.Raycast (transform.position, playerDir, playerDist, cantSeeThru);
-			if (!hit) { // no walls in the way
+			if (!hit) // no walls in the way
+			{
 				//Debug.Log ("I see you!");
 				return true;
 			}
@@ -201,9 +235,11 @@ public class GuardController : MonoBehaviour {
 	bool HearsPlayer()
 	{
 		Collider2D col = Physics2D.OverlapCircle (transform.position, hearDist, hearLayers); // check if player is in range to hear
-		PlayerController pc = col.GetComponent<PlayerController>();
-		if (pc != null) { // if we have a valid playercontroller
-			if (pc.running) { // if player is running, hence making noise
+		PlayerController pc = col.GetComponent<PlayerController> ();
+		if (pc != null) // if we have a valid playercontroller
+		{
+			if (pc.running) // if player is running, hence making noise
+			{
 				return true;
 			}
 		}
@@ -234,9 +270,8 @@ public class GuardController : MonoBehaviour {
 
 		// TODO play walking sound
 
-		lookDir = moveVector.normalized; // set looking direction (used for seeing player)
-		flashlight.SetDirection (lookDir); // set flashlight direction
-
+		if (!rb2d.velocity.Equals (Vector2.zero)) // if guard is moving
+			flashlight.SetDirection (moveVector.normalized); // set flashlight direction
 	}
 
 	void FlipSprite()
