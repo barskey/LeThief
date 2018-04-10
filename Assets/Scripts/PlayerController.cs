@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
 
-	public float speed = 2f;
+	public float runSpeed = 2f;
+	public float sneakSpeed = 0.5f;
 	public bool armsFull = false;
 	public LayerMask pictureLayer;
 	[HideInInspector]
@@ -17,6 +18,7 @@ public class PlayerController : MonoBehaviour {
 	public Flashlight flashlight;
 
 	bool facingRight = true;
+	float speed = 0f;
 
 	// Use this for initialization
 	void Start () {
@@ -24,6 +26,8 @@ public class PlayerController : MonoBehaviour {
 		anim = GetComponent<Animator> ();
 		sr = GetComponent<SpriteRenderer> ();
 		flashlight = GetComponentInChildren<Flashlight> ();
+
+		speed = runSpeed; // start out in run mode
 	}
 	
 	// Update is called once per frame
@@ -33,7 +37,7 @@ public class PlayerController : MonoBehaviour {
 		// get movement input from keyboard or controller
 		movement.x = Input.GetAxis ("Horizontal");
 		movement.y = Input.GetAxis ("Vertical");
-		movement.Normalize ();
+		movement.Normalize (); // so moving in diagonals is at same speed as moving straight
 
 		Move (movement);
 
@@ -41,7 +45,7 @@ public class PlayerController : MonoBehaviour {
 		if (!rb2d.velocity.Equals (Vector2.zero))
 		{
 			flashlight.SetDirection (movement);
-			running = true;
+			running = speed > sneakSpeed ? true : false;
 		}
 		else
 		{
@@ -51,6 +55,13 @@ public class PlayerController : MonoBehaviour {
 		// Toggle flashlight if Q key is pressed
 		if (Input.GetKeyDown (KeyCode.Q))
 			flashlight.ToggleLight ();
+
+		// Toggle sneak if C is pressed
+		if (Input.GetKeyDown (KeyCode.C))
+		{
+			speed = speed > sneakSpeed ? sneakSpeed : runSpeed;
+			// play sneak idle animation
+		}
 	}
 
 	void Move (Vector2 moveVector)
@@ -74,7 +85,7 @@ public class PlayerController : MonoBehaviour {
 
 		anim.SetFloat ("speed", rb2d.velocity.magnitude);
 
-		// TODO play running sound
+		// TODO play running sound if running
 	}
 
 	void FlipSprite()
@@ -86,7 +97,7 @@ public class PlayerController : MonoBehaviour {
 
 	public bool LookingAtPicture()
 	{
-		Vector2 lookDir = (Vector2)(flashlight.transform.rotation * Vector2.forward); // Get lookDir from flashlight, since it is always pointed in direction player is looking
+		Vector2 lookDir = (Vector2)(flashlight.transform.localRotation * Vector3.forward); // Get lookDir from flashlight, since it is always pointed in direction player is looking
 		RaycastHit2D hit = Physics2D.Raycast (transform.position, lookDir.normalized, 1f, pictureLayer);
 		if (hit.collider != null)
 		{

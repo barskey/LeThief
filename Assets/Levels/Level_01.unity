@@ -432,21 +432,6 @@ Prefab:
       propertyPath: points.Array.data[3]
       value: 
       objectReference: {fileID: 540907553}
-    - target: {fileID: 114410193946234062, guid: 436bef4f98a824d128508759c233ab00,
-        type: 2}
-      propertyPath: seeDist
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 114410193946234062, guid: 436bef4f98a824d128508759c233ab00,
-        type: 2}
-      propertyPath: hearDist
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 114410193946234062, guid: 436bef4f98a824d128508759c233ab00,
-        type: 2}
-      propertyPath: runSpeed
-      value: 2.2
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 436bef4f98a824d128508759c233ab00, type: 2}
   m_IsPrefabParent: 0
@@ -2403,6 +2388,27 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: d8e6019cc4e7d4d42b3c35e6668ac05a,
         type: 3}
+    - target: {fileID: 212969328498197350, guid: 00fce2f59eed646c0890583713c6946b,
+        type: 2}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 34528a3666dfb457f9f24d93aa007163,
+        type: 3}
+    - target: {fileID: 212969328498197350, guid: 00fce2f59eed646c0890583713c6946b,
+        type: 2}
+      propertyPath: m_Size.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 212969328498197350, guid: 00fce2f59eed646c0890583713c6946b,
+        type: 2}
+      propertyPath: m_Size.y
+      value: 1.1666666
+      objectReference: {fileID: 0}
+    - target: {fileID: 212969328498197350, guid: 00fce2f59eed646c0890583713c6946b,
+        type: 2}
+      propertyPath: m_WasSpriteAssigned
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 00fce2f59eed646c0890583713c6946b, type: 2}
   m_IsPrefabParent: 0

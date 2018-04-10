@@ -22,7 +22,6 @@ public class GuardController : MonoBehaviour {
 	public float seeDist = 3f;
 	public float hearDist = 4f;
 	public LayerMask cantSeeThru;
-	public float totSearchTime = 4f;
 
 	enum Behavior {
 		none,
@@ -34,7 +33,6 @@ public class GuardController : MonoBehaviour {
 	Behavior guardState;
 	Behavior prevState;
 	bool facingRight = true;
-	Vector2 lookDir; // direction guard is looking
 	GameObject player;
 
 	// Use this for initialization
@@ -46,7 +44,8 @@ public class GuardController : MonoBehaviour {
 		emote = transform.Find ("GuardState").GetComponent<SpriteRenderer> ();
 		player = GameObject.FindGameObjectWithTag ("Player");
 
-		guardState = Behavior.patrol;
+		guardState = Behavior.patrol; // start guard in patrol
+		prevState = Behavior.none;
 	}
 
 	// Update is called once per frame
@@ -56,7 +55,6 @@ public class GuardController : MonoBehaviour {
 		{
 		case Behavior.alert:
 			if (guardState != prevState) {
-				prevState = guardState;
 				AlertEnter ();
 			} else {
 				AlertUpdate ();
@@ -64,7 +62,6 @@ public class GuardController : MonoBehaviour {
 			break;
 		case Behavior.patrol:
 			if (guardState != prevState) {
-				prevState = guardState;
 				PatrolEnter ();
 			} else {
 				PatrolUpdate ();
@@ -72,7 +69,6 @@ public class GuardController : MonoBehaviour {
 			break;
 		case Behavior.chase:
 			if (guardState != prevState) {
-				prevState = guardState;
 				ChaseEnter ();
 			} else {
 				ChaseUpdate ();
@@ -84,11 +80,31 @@ public class GuardController : MonoBehaviour {
 		}
 	}
 
+	void OnDrawGizmosSelected ()
+	{
+		Gizmos.color = Color.yellow;
+		Gizmos.DrawWireSphere (transform.position, hearDist); // draw circle (sphere) for hear distance
+
+		if (flashlight != null) 
+		{
+			Vector3 lookDir = flashlight.transform.localRotation * Vector3.forward; // use flashlight direction as direction guard is looking
+
+			Gizmos.color = Color.green;
+			Vector3 ray = Quaternion.Euler (0f, -seeAngleHalf, -seeAngleHalf) * lookDir * seeDist;
+			Gizmos.DrawRay (transform.position, ray);
+
+			ray = Quaternion.Euler (0f, seeAngleHalf, seeAngleHalf) * lookDir * seeDist;
+			Gizmos.DrawRay (transform.position, ray);
+		}
+	}
+
 	int patrolIndex = 0;
 	Vector2 moveTo;
 	void PatrolEnter()
 	{
 		Debug.Log ("PatrolEnter");
+		prevState = Behavior.patrol;
+
 		emote.enabled = false; // hide emote above head
 
 		moveTo = (Vector2)points [patrolIndex].position; // set destination vector
@@ -104,12 +120,10 @@ public class GuardController : MonoBehaviour {
 
 		if (SeesPlayer ())
 		{
-			prevState = guardState;
 			guardState = Behavior.chase;
 		}
 		else if (HearsPlayer ())
 		{
-			prevState = guardState;
 			guardState = Behavior.alert;
 		}
 		else if (dist < 0.01f) // if guard has reached patrol point
@@ -119,13 +133,20 @@ public class GuardController : MonoBehaviour {
 				patrolIndex = 0;
 			moveTo = (Vector2)points [patrolIndex].position; // update destination vector
 		}
+
+		// TODO play whistle sound at random times
+
+		prevState = Behavior.patrol;
 	}
 
-	float waitedSecs;
-	Vector3 lastHeard;
+	Vector3 lastPosition;
+	Sequence lookSeq;
+
 	void AlertEnter()
 	{
 		Debug.Log ("AlertEnter");
+		prevState = Behavior.alert;
+
 		// stop
 		rb2d.velocity = Vector2.zero;
 		anim.SetFloat ("speed", 0);
@@ -136,32 +157,42 @@ public class GuardController : MonoBehaviour {
 
 		// TODO play "Hmmm?" or "What's that?" sound
 
-		waitedSecs = 0f; // reset time have waited so far
+		lastPosition = player.transform.position; // save location sound was heard
 
-		lastHeard = player.transform.position; // save location sound was heard
-		float angleToPlayer = Vector3.Angle (transform.position, player.transform.position);
-		Vector3 newRotate = new Vector3 (flashlight.transform.eulerAngles.x,
-										flashlight.transform.eulerAngles.y,
-										angleToPlayer
-		); // make vector3 of new angles
+		// guard will look in direction he heard sound, then scan around looking for player. Using random values to make it
+		// look like guard is searching erratically.
 
-		// guard will look in direction he heard sound, then scan back and forth
-		// by seeAngleHalf to look for player. totSearhTime is split so each
-		// pause will last 1/4 of total time.
+		Vector3 playerVector = lastPosition - transform.position; // create transform to player position
 		
 		// set up look sequence for panning back and forth
-		Sequence lookSeq = DOTween.Sequence ();
-		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight in direction last heard
-		lookSeq.AppendInterval (totSearchTime / 4); // add pause
-		newRotate.z += seeAngleHalf;
-		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight to right
-		lookSeq.AppendInterval (totSearchTime / 4); // add pause
-		newRotate.z -= seeAngleHalf * 2;
-		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight to left
-		lookSeq.AppendInterval (totSearchTime / 4); // add pause
-		newRotate.z = angleToPlayer;
-		lookSeq.Append (flashlight.transform.DORotate (newRotate, 0.2f)); // point flashlight back to direction last heard
-		lookSeq.AppendInterval (totSearchTime / 4); // add pause
+		lookSeq = DOTween.Sequence ();
+
+		lookSeq.Append (flashlight.transform.DOLookAt (lastPosition, Random.Range (0.1f, 1f))); // point flashlight in direction last heard
+		lookSeq.AppendInterval (Random.Range (0.1f, 1f)); // add random length pause
+
+		// create new vector3 rotated by random amount
+		Vector3 newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.1f, 1f))); // add to sequence
+
+		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random lrngth pause
+
+		// make another rotated vector by random amount
+		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.1f, 1f))); // add to sequence
+
+		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
+
+		// make another rotated vector by random amount
+		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.1f, 1f))); // add to sequence
+
+		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
+
+		// go back to patrol if we reach the end of this sequene
+		lookSeq.AppendCallback (() => {
+			guardState = Behavior.patrol;
+		});
+
 		lookSeq.Play (); // start the tween sequence
 
 		guardState = Behavior.alert; // go to alert update
@@ -169,28 +200,25 @@ public class GuardController : MonoBehaviour {
 		
 	void AlertUpdate()
 	{
+		prevState = Behavior.alert;
 		//Debug.Log ("AlertUpdate");
-		// Look around
 		// Enter Chase if sees player, otherwise return to patrol
-		
 		if (SeesPlayer ())
 		{
-			prevState = guardState;
+			lookSeq.Complete (); // stop the current look tween
 			guardState = Behavior.chase;
 		}
-		else if (HearsPlayer ())
+		else if (HearsPlayer ()) // TODO Guard goes crazy if run while he is searching - need to add delay
 		{
+			lookSeq.Complete (); // stop the current look tween
 			prevState = Behavior.none; // set to none so guard re-enters alert state to start over
 			guardState = Behavior.alert;
-		}
-		else if (waitedSecs > totSearchTime) // nothing heard or seen so...
-		{
-			guardState = Behavior.patrol; // ...go back to patrol
 		}
 	}
 
 	void ChaseEnter()
 	{
+		prevState = Behavior.chase;
 		Debug.Log ("ChaseEnter");
 		// set question mark above head
 		emote.sprite = ChaseEmote;
@@ -205,21 +233,23 @@ public class GuardController : MonoBehaviour {
 	{
 		moveTo = player.transform.position; // set new target position to player position
 		Move(runSpeed);
-		Debug.Log ("ChaseUpdate");
+		prevState = Behavior.chase;
+		//Debug.Log ("ChaseUpdate");
 	}
 
 	bool SeesPlayer()
 	{
 		// find the angle between player and direction guard is looking to see if within cone of vision
 		Vector2 lookDir = (Vector2)(flashlight.transform.localRotation * Vector3.forward); // use flashlight direction as direction guard is looking
-		Vector2 playerDir = (Vector2)player.transform.position - (Vector2)transform.position;
+		Vector2 playerDir = (Vector2)player.transform.position - (Vector2)transform.position; // direction to player
 		float playerAngle = Vector2.Angle (lookDir, playerDir);
 
 		// find distance to player
 		float playerDist = Vector3.Distance (player.transform.position, transform.position);
+		float seeDistance = player.GetComponent<PlayerController> ().flashlight.isOn ? float.PositiveInfinity : seeDist;
 
 		// if player could be seen, check if there are obstacles (walls) between
-		if (playerAngle <= seeAngleHalf && playerDist <= seeDist)
+		if (playerAngle <= seeAngleHalf && playerDist <= seeDistance)
 		{
 			RaycastHit2D hit = Physics2D.Raycast (transform.position, playerDir, playerDist, cantSeeThru);
 			if (!hit) // no walls in the way
