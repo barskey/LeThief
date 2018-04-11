@@ -21,7 +21,8 @@ public class PlayerController : MonoBehaviour {
 	float speed = 0f;
 
 	// Use this for initialization
-	void Start () {
+	void Start ()
+	{
 		rb2d = GetComponent<Rigidbody2D> ();
 		anim = GetComponent<Animator> ();
 		sr = GetComponent<SpriteRenderer> ();
@@ -31,7 +32,8 @@ public class PlayerController : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+	{
 		Vector2 movement = Vector2.zero;
 
 		// get movement input from keyboard or controller
@@ -54,7 +56,9 @@ public class PlayerController : MonoBehaviour {
 
 		// Toggle flashlight if Q key is pressed
 		if (Input.GetKeyDown (KeyCode.Q))
+		{
 			flashlight.ToggleLight ();
+		}
 
 		// Toggle sneak if C is pressed
 		if (Input.GetKeyDown (KeyCode.C))
@@ -88,14 +92,14 @@ public class PlayerController : MonoBehaviour {
 		// TODO play running sound if running
 	}
 
-	void FlipSprite()
+	void FlipSprite ()
 	{
 		bool flipState = sr.flipX;
 		sr.flipX = !flipState;
 		facingRight = !facingRight;
 	}
 
-	public bool LookingAtPicture()
+	public bool LookingAtPicture ()
 	{
 		Vector2 lookDir = (Vector2)(flashlight.transform.localRotation * Vector3.forward); // Get lookDir from flashlight, since it is always pointed in direction player is looking
 		RaycastHit2D hit = Physics2D.Raycast (transform.position, lookDir.normalized, 1f, pictureLayer);

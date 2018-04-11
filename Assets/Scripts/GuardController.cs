@@ -28,7 +28,7 @@ public class GuardController : MonoBehaviour {
 		patrol,
 		alert,
 		chase
-	} // added none behavior for use in prevState so first time thru will enter patrolEnter
+	} // none behavior used in prevState so first time thru will enter *Enter state instead of *Update
 
 	Behavior guardState;
 	Behavior prevState;
@@ -36,7 +36,8 @@ public class GuardController : MonoBehaviour {
 	GameObject player;
 
 	// Use this for initialization
-	void Start () {
+	void Start ()
+	{
 		rb2d = GetComponent<Rigidbody2D> ();
 		anim = GetComponent<Animator> ();
 		sr = GetComponent<SpriteRenderer> ();
@@ -49,34 +50,41 @@ public class GuardController : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+	{
 		// TODO is this the best way to implement this State Machine?
 		switch (guardState)
 		{
-		case Behavior.alert:
-			if (guardState != prevState) {
-				AlertEnter ();
-			} else {
-				AlertUpdate ();
-			}
-			break;
-		case Behavior.patrol:
-			if (guardState != prevState) {
-				PatrolEnter ();
-			} else {
-				PatrolUpdate ();
-			}
-			break;
-		case Behavior.chase:
-			if (guardState != prevState) {
-				ChaseEnter ();
-			} else {
-				ChaseUpdate ();
-			}
-			break;
-		default:
-			PatrolEnter ();
-			break;
+			case Behavior.alert:
+				if (guardState != prevState)
+				{
+					AlertEnter ();
+				}
+				else
+				{
+					AlertUpdate ();
+				}
+				break;
+			case Behavior.patrol:
+				if (guardState != prevState)
+				{
+					PatrolEnter ();
+				}
+				else
+				{
+					PatrolUpdate ();
+				}
+				break;
+			case Behavior.chase:
+				if (guardState != prevState)
+				{
+					ChaseEnter ();
+				}
+				else
+				{
+					ChaseUpdate ();
+				}
+				break;
 		}
 	}
 
@@ -100,23 +108,23 @@ public class GuardController : MonoBehaviour {
 
 	int patrolIndex = 0;
 	Vector2 moveTo;
-	void PatrolEnter()
+	void PatrolEnter ()
 	{
 		Debug.Log ("PatrolEnter");
 		prevState = Behavior.patrol;
 
 		emote.enabled = false; // hide emote above head
 
-		moveTo = (Vector2)points [patrolIndex].position; // set destination vector
+		moveTo = points [patrolIndex].position.Vector2; // set destination vector
 
 		guardState = Behavior.patrol; // go to patrol update
 	}
 
-	void PatrolUpdate()
+	void PatrolUpdate ()
 	{
 		//Debug.Log ("PatrolUpdate");
 		Move (walkSpeed);
-		float dist = Vector2.Distance (moveTo, (Vector2)transform.position);
+		float dist = Vector2.Distance (moveTo, transform.position.Vector2);
 
 		if (SeesPlayer ())
 		{
@@ -130,8 +138,10 @@ public class GuardController : MonoBehaviour {
 		{
 			patrolIndex++; // get next point index
 			if (patrolIndex >= points.Length) // reset index to first point if at the end
+			{
 				patrolIndex = 0;
-			moveTo = (Vector2)points [patrolIndex].position; // update destination vector
+			}
+			moveTo = points [patrolIndex].position.Vector2; // update destination vector
 		}
 
 		// TODO play whistle sound at random times
@@ -139,10 +149,10 @@ public class GuardController : MonoBehaviour {
 		prevState = Behavior.patrol;
 	}
 
-	Vector3 lastPosition;
+	Vector2 lastPosition;
 	Sequence lookSeq;
 
-	void AlertEnter()
+	void AlertEnter ()
 	{
 		Debug.Log ("AlertEnter");
 		prevState = Behavior.alert;
@@ -157,48 +167,39 @@ public class GuardController : MonoBehaviour {
 
 		// TODO play "Hmmm?" or "What's that?" sound
 
-		lastPosition = player.transform.position; // save location sound was heard
+		lastPosition = player.transform.position.Vector2; // save location sound was heard
 
 		// guard will look in direction he heard sound, then scan around looking for player. Using random values to make it
 		// look like guard is searching erratically.
 
-		Vector3 playerVector = lastPosition - transform.position; // create transform to player position
+		Vector3 playerVector = lastPosition.Vector3 - transform.position; // create transform to player position
 		
 		// set up look sequence for panning back and forth
 		lookSeq = DOTween.Sequence ();
-
-		lookSeq.Append (flashlight.transform.DOLookAt (lastPosition, Random.Range (0.1f, 1f))); // point flashlight in direction last heard
-		lookSeq.AppendInterval (Random.Range (0.1f, 1f)); // add random length pause
-
+		lookSeq.Append (flashlight.transform.DOLookAt (lastPosition.Vector3, Random.Range (0.2f, 1f))); // point flashlight in direction last heard
+		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
 		// create new vector3 rotated by random amount
 		Vector3 newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
-		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.1f, 1f))); // add to sequence
-
-		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random lrngth pause
-
+		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
+		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
 		// make another rotated vector by random amount
 		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
-		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.1f, 1f))); // add to sequence
-
+		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
 		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
-
 		// make another rotated vector by random amount
 		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
-		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.1f, 1f))); // add to sequence
-
+		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
 		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
-
 		// go back to patrol if we reach the end of this sequene
 		lookSeq.AppendCallback (() => {
 			guardState = Behavior.patrol;
 		});
-
 		lookSeq.Play (); // start the tween sequence
 
 		guardState = Behavior.alert; // go to alert update
 	}
 		
-	void AlertUpdate()
+	void AlertUpdate ()
 	{
 		prevState = Behavior.alert;
 		//Debug.Log ("AlertUpdate");
@@ -208,36 +209,64 @@ public class GuardController : MonoBehaviour {
 			lookSeq.Complete (); // stop the current look tween
 			guardState = Behavior.chase;
 		}
-		else if (HearsPlayer ()) // TODO Guard goes crazy if run while he is searching - need to add delay
+		else if (HearsPlayer ()) // TODO Guard goes crazy if player runs while he is searching - need to add delay
 		{
 			lookSeq.Complete (); // stop the current look tween
 			prevState = Behavior.none; // set to none so guard re-enters alert state to start over
 			guardState = Behavior.alert;
 		}
 	}
-
-	void ChaseEnter()
+	
+	float waited;
+	void ChaseEnter ()
 	{
 		prevState = Behavior.chase;
 		Debug.Log ("ChaseEnter");
-		// set question mark above head
+		// set exclamation mark above head
 		emote.sprite = ChaseEmote;
 		emote.enabled = true;
+		
+		waited = 0f;
+		
+		// play "yell" sound
 
-		moveTo = player.transform.position; // set new target position to player position
+		moveTo = player.transform.position.Vector2; // set new target position to player position
 
 		guardState = Behavior.chase; // go to chase update
 	}
 
-	void ChaseUpdate()
+	void ChaseUpdate ()
 	{
-		moveTo = player.transform.position; // set new target position to player position
-		Move(runSpeed);
+		if (waited > 0.5f) // wait a little bit before rushing
+		{
+			if (SeesPlayer())
+			{
+				moveTo = player.transform.position.Vector2; // set new target position to player position
+				lastPosition = moveTo; // remember last position player was seen
+			}
+			else
+			{
+				moveTo = lastPosition;
+			}
+
+			Move(runSpeed);
+			
+			float dist = Vector2.Distance (moveTo, transform.position.Vector2);
+			if (dist < 0.1f) // reached destination last seen position (reached player handled in OnColliderEnter2D)
+			{
+				guardState = Behavior.alert; // start searching again, before resuming patrol
+			}
+		}
+		else
+		{
+			waited += Time.deltaTime;
+		}
+		
 		prevState = Behavior.chase;
 		//Debug.Log ("ChaseUpdate");
 	}
 
-	bool SeesPlayer()
+	bool SeesPlayer ()
 	{
 		// find the angle between player and direction guard is looking to see if within cone of vision
 		Vector2 lookDir = (Vector2)(flashlight.transform.localRotation * Vector3.forward); // use flashlight direction as direction guard is looking
@@ -262,7 +291,7 @@ public class GuardController : MonoBehaviour {
 		return false; // can't see player
 	}
 
-	bool HearsPlayer()
+	bool HearsPlayer ()
 	{
 		Collider2D col = Physics2D.OverlapCircle (transform.position, hearDist, hearLayers); // check if player is in range to hear
 		PlayerController pc = col.GetComponent<PlayerController> ();
@@ -276,9 +305,9 @@ public class GuardController : MonoBehaviour {
 		return false;
 	}
 
-	void Move(float speed)
+	void Move (float speed)
 	{
-		Vector2 moveVector = moveTo - (Vector2)transform.position;
+		Vector2 moveVector = moveTo - transform.position.Vector2;
 		rb2d.velocity = moveVector.normalized * speed;
 
 		if (facingRight) // if guard was facing right
@@ -304,10 +333,21 @@ public class GuardController : MonoBehaviour {
 			flashlight.SetDirection (moveVector.normalized); // set flashlight direction
 	}
 
-	void FlipSprite()
+	void FlipSprite ()
 	{
 		bool flipState = sr.flipX;
 		sr.flipX = !flipState;
 		facingRight = !facingRight;
+	}
+	
+	void OnColliderEnter2D (Collider2D col)
+	{
+		if (col.CompareTag ("Player"))
+		{
+			Debug.Log ("Caught you!");
+			// pause gameplay
+			// show "caught" jailbars and text
+			// button to restart
+		}
 	}
 }

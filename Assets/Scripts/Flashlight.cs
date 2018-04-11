@@ -9,12 +9,12 @@ public class Flashlight : MonoBehaviour {
 
 	public bool isOn = false; // convenience for player/guard to check state
 
-	void Awake()
+	void Awake ()
 	{
 		lightComp = GetComponent<Light> ();
 	}
 
-	public void ToggleLight()
+	public void ToggleLight ()
 	{
 		isOn = !isOn;
 		lightComp.enabled = isOn;
@@ -22,7 +22,7 @@ public class Flashlight : MonoBehaviour {
 		// TODO play click sound
 	}
 
-	public void SetDirection(Vector2 dir)
+	public void SetDirection (Vector2 dir)
 	{
 		transform.rotation = Quaternion.LookRotation (new Vector3 (dir.x, dir.y), Vector3.forward);
 	}

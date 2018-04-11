@@ -7,18 +7,18 @@ public class Picture : MonoBehaviour {
 	public GameObject picGameObject;
 	public Sprite picSprite;
 
-	void Awake()
+	void Awake ()
 	{
 		picGameObject.GetComponent<SpriteRenderer> ().sprite = picSprite;
 		picGameObject.transform.rotation = Quaternion.Euler (0, 0, 0);
 	}
 
-	void SetBigPicture(bool state)
+	void SetBigPicture (bool state)
 	{
 		picGameObject.GetComponent<SpriteRenderer> ().enabled = state;
 	}
 
-	void OnTriggerStay2D(Collider2D col)
+	void OnTriggerStay2D (Collider2D col)
 	{
 		if (col.gameObject.CompareTag ("Player")) // if this is the Player
 		{
@@ -34,7 +34,7 @@ public class Picture : MonoBehaviour {
 		}
 	}
 
-	void OnTriggerExit2D(Collider2D col)
+	void OnTriggerExit2D (Collider2D col)
 	{
 		if (col.gameObject.CompareTag ("Player")) // if this is the Player
 		{
