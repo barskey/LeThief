@@ -10,15 +10,19 @@ public class PlayerController : MonoBehaviour {
 	public LayerMask pictureLayer;
 	[HideInInspector]
 	public bool running = false;
+	[HideInInspector]
+	public Flashlight flashlight;
+	[HideInInspector]
+	public Sprite carriedPic;
 
 	Rigidbody2D rb2d;
 	Animator anim;
 	SpriteRenderer sr;
-	[HideInInspector]
-	public Flashlight flashlight;
+	SpriteRenderer picSr;
 
 	bool facingRight = true;
 	float speed = 0f;
+	Picture picController;
 
 	// Use this for initialization
 	void Start ()
@@ -26,6 +30,8 @@ public class PlayerController : MonoBehaviour {
 		rb2d = GetComponent<Rigidbody2D> ();
 		anim = GetComponent<Animator> ();
 		sr = GetComponent<SpriteRenderer> ();
+		picSr = transform.Find ("Pic").GetComponent<SpriteRenderer> ();
+		Debug.Log (picSr);
 		flashlight = GetComponentInChildren<Flashlight> ();
 
 		speed = runSpeed; // start out in run mode
@@ -65,6 +71,15 @@ public class PlayerController : MonoBehaviour {
 		{
 			speed = speed > sneakSpeed ? sneakSpeed : runSpeed;
 			// play sneak idle animation
+		}
+
+		// Grab the pic if E is pressed
+		if (Input.GetKeyDown (KeyCode.E))
+		{
+			if (picController != null)
+			{
+				GotPicture ();
+			}
 		}
 	}
 
@@ -113,4 +128,30 @@ public class PlayerController : MonoBehaviour {
 		}
 	}
 
+	void GotPicture ()
+	{
+		carriedPic = picController.GrabPicture ();
+		picSr.sprite = 	carriedPic;
+		picSr.enabled = true;
+		// TODO tell game object to set alarm
+
+	}
+
+	void OnTriggerEnter2D (Collider2D col)
+	{
+		if (col.gameObject.CompareTag ("Picture")) // if this is a Picture
+		{
+			picController = col.GetComponent<Picture> ();
+
+		}
+	}
+
+	void OnTriggerExit2D (Collider2D col)
+	{
+		if (col.gameObject.CompareTag ("Picture")) // if this is a Picture
+		{
+			picController = null;
+
+		}
+	}
 }

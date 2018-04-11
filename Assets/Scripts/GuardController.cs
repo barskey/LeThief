@@ -115,7 +115,7 @@ public class GuardController : MonoBehaviour {
 
 		emote.enabled = false; // hide emote above head
 
-		moveTo = points [patrolIndex].position.Vector2; // set destination vector
+		moveTo = (Vector2)points [patrolIndex].position; // set destination vector
 
 		guardState = Behavior.patrol; // go to patrol update
 	}
@@ -124,7 +124,7 @@ public class GuardController : MonoBehaviour {
 	{
 		//Debug.Log ("PatrolUpdate");
 		Move (walkSpeed);
-		float dist = Vector2.Distance (moveTo, transform.position.Vector2);
+		float dist = Vector2.Distance (moveTo, (Vector2)transform.position);
 
 		if (SeesPlayer ())
 		{
@@ -141,7 +141,7 @@ public class GuardController : MonoBehaviour {
 			{
 				patrolIndex = 0;
 			}
-			moveTo = points [patrolIndex].position.Vector2; // update destination vector
+			moveTo = (Vector2)points [patrolIndex].position; // update destination vector
 		}
 
 		// TODO play whistle sound at random times
@@ -151,10 +151,12 @@ public class GuardController : MonoBehaviour {
 
 	Vector2 lastPosition;
 	Sequence lookSeq;
+	float hearTimer; // used in case player is running while guard is searching, so he doesnt get all wonky while resetting
+	float hearCooldown = 0.5f;
 
 	void AlertEnter ()
 	{
-		Debug.Log ("AlertEnter");
+		//Debug.Log ("AlertEnter");
 		prevState = Behavior.alert;
 
 		// stop
@@ -165,40 +167,18 @@ public class GuardController : MonoBehaviour {
 		emote.sprite = alertEmote;
 		emote.enabled = true;
 
+		hearTimer = 0f;
+
 		// TODO play "Hmmm?" or "What's that?" sound
 
-		lastPosition = player.transform.position.Vector2; // save location sound was heard
+		lastPosition = (Vector2)player.transform.position; // save location sound was heard
 
-		// guard will look in direction he heard sound, then scan around looking for player. Using random values to make it
-		// look like guard is searching erratically.
-
-		Vector3 playerVector = lastPosition.Vector3 - transform.position; // create transform to player position
-		
-		// set up look sequence for panning back and forth
-		lookSeq = DOTween.Sequence ();
-		lookSeq.Append (flashlight.transform.DOLookAt (lastPosition.Vector3, Random.Range (0.2f, 1f))); // point flashlight in direction last heard
-		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
-		// create new vector3 rotated by random amount
-		Vector3 newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
-		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
-		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
-		// make another rotated vector by random amount
-		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
-		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
-		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
-		// make another rotated vector by random amount
-		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
-		lookSeq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
-		lookSeq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
-		// go back to patrol if we reach the end of this sequene
-		lookSeq.AppendCallback (() => {
-			guardState = Behavior.patrol;
-		});
-		lookSeq.Play (); // start the tween sequence
+		lookSeq = BuildLookSequence (lastPosition); // generate random searching sequence
+		lookSeq.Play (); // and start playing
 
 		guardState = Behavior.alert; // go to alert update
 	}
-		
+
 	void AlertUpdate ()
 	{
 		prevState = Behavior.alert;
@@ -209,28 +189,37 @@ public class GuardController : MonoBehaviour {
 			lookSeq.Complete (); // stop the current look tween
 			guardState = Behavior.chase;
 		}
-		else if (HearsPlayer ()) // TODO Guard goes crazy if player runs while he is searching - need to add delay
+
+		if (hearTimer > hearCooldown)
 		{
-			lookSeq.Complete (); // stop the current look tween
-			prevState = Behavior.none; // set to none so guard re-enters alert state to start over
-			guardState = Behavior.alert;
+			if (HearsPlayer ()) // TODO Guard searches erratically if player runs while he is searching - can we fix it?
+			{
+				hearTimer = 0f;
+				lookSeq.Complete (); // stop the current look tween
+				prevState = Behavior.none; // set to none so guard re-enters alert state to start over
+				guardState = Behavior.alert;
+			}
 		}
+
+		hearTimer += Time.deltaTime;
 	}
 	
 	float waited;
 	void ChaseEnter ()
 	{
 		prevState = Behavior.chase;
-		Debug.Log ("ChaseEnter");
+		//Debug.Log ("ChaseEnter");
 		// set exclamation mark above head
 		emote.sprite = ChaseEmote;
 		emote.enabled = true;
 		
 		waited = 0f;
+
+		rb2d.velocity = Vector2.zero; // stop
 		
 		// play "yell" sound
 
-		moveTo = player.transform.position.Vector2; // set new target position to player position
+		moveTo = (Vector2)player.transform.position; // set new target position to player position
 
 		guardState = Behavior.chase; // go to chase update
 	}
@@ -241,7 +230,7 @@ public class GuardController : MonoBehaviour {
 		{
 			if (SeesPlayer())
 			{
-				moveTo = player.transform.position.Vector2; // set new target position to player position
+				moveTo = (Vector2)player.transform.position; // set new target position to player position
 				lastPosition = moveTo; // remember last position player was seen
 			}
 			else
@@ -251,8 +240,13 @@ public class GuardController : MonoBehaviour {
 
 			Move(runSpeed);
 			
-			float dist = Vector2.Distance (moveTo, transform.position.Vector2);
-			if (dist < 0.1f) // reached destination last seen position (reached player handled in OnColliderEnter2D)
+			float captureDist = 0.1f;			
+			float dist = Vector2.Distance (moveTo, (Vector2)transform.position);
+			if (Vector2.Distance ((Vector2)player.transform.position, (Vector2)transform.position) < captureDist)
+			{
+				CaughtYou ();
+			}
+			else if (dist < captureDist)
 			{
 				guardState = Behavior.alert; // start searching again, before resuming patrol
 			}
@@ -293,13 +287,15 @@ public class GuardController : MonoBehaviour {
 
 	bool HearsPlayer ()
 	{
-		Collider2D col = Physics2D.OverlapCircle (transform.position, hearDist, hearLayers); // check if player is in range to hear
-		PlayerController pc = col.GetComponent<PlayerController> ();
-		if (pc != null) // if we have a valid playercontroller
+		// check if player is in range to hear
+		Collider2D col = Physics2D.OverlapCircle (transform.position, hearDist, hearLayers);
+		if (col != null)
 		{
-			if (pc.running) // if player is running, hence making noise
-			{
-				return true;
+			PlayerController pc = col.GetComponent<PlayerController> ();
+			if (pc != null) { // if we have a valid playercontroller
+				if (pc.running) { // if player is running, hence making noise
+					return true;
+				}
 			}
 		}
 		return false;
@@ -307,7 +303,7 @@ public class GuardController : MonoBehaviour {
 
 	void Move (float speed)
 	{
-		Vector2 moveVector = moveTo - transform.position.Vector2;
+		Vector2 moveVector = moveTo - (Vector2)transform.position;
 		rb2d.velocity = moveVector.normalized * speed;
 
 		if (facingRight) // if guard was facing right
@@ -339,15 +335,52 @@ public class GuardController : MonoBehaviour {
 		sr.flipX = !flipState;
 		facingRight = !facingRight;
 	}
-	
-	void OnColliderEnter2D (Collider2D col)
+
+	void CaughtYou ()
 	{
-		if (col.CompareTag ("Player"))
-		{
-			Debug.Log ("Caught you!");
-			// pause gameplay
-			// show "caught" jailbars and text
+		Debug.Log ("Caught you!");
+		Time.timeScale = 0; // freese the game
+		// tell game manager game is over
+			// show bars and caught you text
+			// save high score
 			// button to restart
-		}
+	}
+
+	Sequence BuildLookSequence (Vector2 lastPosition)
+	{
+		// guard will look in direction he heard sound, then scan around looking for player. Using random values to make it
+		// look like guard is searching erratically.
+
+		Vector3 playerVector = (Vector3)lastPosition - transform.position; // create vector to player position
+
+		// set up look sequence for panning back and forth
+		Sequence seq = DOTween.Sequence ();
+
+		seq.AppendInterval (0.3f); // start with brief pause to make it seem more natural
+
+		seq.Append (flashlight.transform.DOLookAt ((Vector3)lastPosition, Random.Range (0.2f, 1f))); // point flashlight in direction last heard
+		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
+
+		// create new vector3 rotated by random amount
+		Vector3 newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		seq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
+		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
+
+		// make another rotated vector by random amount
+		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		seq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
+		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
+
+		// make another rotated vector by random amount
+		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		seq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
+		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
+
+		// go back to patrol if we reach the end of this sequene
+		seq.AppendCallback (() => {
+			guardState = Behavior.patrol;
+		});
+
+		return seq;
 	}
 }
