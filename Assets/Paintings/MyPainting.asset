@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 183828514707a46a6831aad7317a91ad, type: 3}
+  m_Name: MyPainting
+  m_EditorClassIdentifier: 
+  name: My Painting
+  bigSprite: {fileID: 21300000, guid: d8e6019cc4e7d4d42b3c35e6668ac05a, type: 3}

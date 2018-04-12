@@ -69,8 +69,17 @@ public class PlayerController : MonoBehaviour {
 		// Toggle sneak if C is pressed
 		if (Input.GetKeyDown (KeyCode.C))
 		{
-			speed = speed > sneakSpeed ? sneakSpeed : runSpeed;
-			// play sneak idle animation
+			if (speed > sneakSpeed) // in run mode
+			{
+				speed = sneakSpeed;
+				anim.SetBool ("sneak", true);
+			}
+			else
+			{
+				speed = runSpeed;
+				anim.SetBool ("sneak", false);
+			}
+
 		}
 
 		// Grab the pic if E is pressed
