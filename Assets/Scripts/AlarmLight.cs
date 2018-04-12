@@ -11,8 +11,8 @@ public class AlarmLight : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		Light light = GetComponent<Light> ();
-		light.color = alarmLow;
-		light.DOColor (alarmHigh, pulseTime).SetLoops (-1, LoopType.Yoyo);
+		Light lightComp = GetComponent<Light> ();
+		lightComp.color = alarmLow;
+		lightComp.DOColor (alarmHigh, pulseTime).SetLoops (-1, LoopType.Yoyo);
 	}
 }

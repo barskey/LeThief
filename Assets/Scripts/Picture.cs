@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Picture : MonoBehaviour {
-
+public class Picture : MonoBehaviour
+{
 	public GameObject picGameObject;
 	public Painting painting;
 

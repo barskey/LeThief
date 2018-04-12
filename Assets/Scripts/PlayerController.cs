@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MonoBehaviour
+{
 
 	public float runSpeed = 2f;
 	public float sneakSpeed = 0.5f;
@@ -13,7 +14,7 @@ public class PlayerController : MonoBehaviour {
 	[HideInInspector]
 	public Flashlight flashlight;
 	[HideInInspector]
-	public Painting carriedPic;
+	public Painting carriedPainting;
 
 	Rigidbody2D rb2d;
 	Animator anim;
@@ -139,8 +140,8 @@ public class PlayerController : MonoBehaviour {
 
 	void GotPicture ()
 	{
-		carriedPic = picController.GrabPicture ();
-		picSr.sprite = 	carriedPic.bigSprite;
+		carriedPainting = picController.GrabPicture ();
+		picSr.sprite = 	carriedPainting.bigSprite;
 		picSr.enabled = true;
 		// TODO tell game object to set alarm
 

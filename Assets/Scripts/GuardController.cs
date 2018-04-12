@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-public class GuardController : MonoBehaviour {
+public class GuardController : MonoBehaviour
+{
 
 	Rigidbody2D rb2d;
 	Animator anim;
@@ -244,7 +245,7 @@ public class GuardController : MonoBehaviour {
 			float dist = Vector2.Distance (moveTo, (Vector2)transform.position);
 			if (Vector2.Distance ((Vector2)player.transform.position, (Vector2)transform.position) < captureDist)
 			{
-				CaughtYou ();
+				GameManager.GameOver (); // TODO Add additional checks for player caught outside Chase state.
 			}
 			else if (dist < captureDist)
 			{
@@ -334,16 +335,6 @@ public class GuardController : MonoBehaviour {
 		bool flipState = sr.flipX;
 		sr.flipX = !flipState;
 		facingRight = !facingRight;
-	}
-
-	void CaughtYou ()
-	{
-		Debug.Log ("Caught you!");
-		Time.timeScale = 0; // freese the game
-		// tell game manager game is over
-			// show bars and caught you text
-			// save high score
-			// button to restart
 	}
 
 	Sequence BuildLookSequence (Vector2 lastPosition)
