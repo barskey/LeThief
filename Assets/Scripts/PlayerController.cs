@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour {
 	[HideInInspector]
 	public Flashlight flashlight;
 	[HideInInspector]
-	public Sprite carriedPic;
+	public Painting carriedPic;
 
 	Rigidbody2D rb2d;
 	Animator anim;
@@ -131,7 +131,7 @@ public class PlayerController : MonoBehaviour {
 	void GotPicture ()
 	{
 		carriedPic = picController.GrabPicture ();
-		picSr.sprite = 	carriedPic;
+		picSr.sprite = 	carriedPic.bigSprite;
 		picSr.enabled = true;
 		// TODO tell game object to set alarm
 

@@ -5,14 +5,14 @@ using UnityEngine;
 public class Picture : MonoBehaviour {
 
 	public GameObject picGameObject;
-	public Sprite picSprite;
+	public Painting painting;
 
 	private SpriteRenderer sr;
 	private PlayerController pc;
 
 	void Awake ()
 	{
-		picGameObject.GetComponent<SpriteRenderer> ().sprite = picSprite;
+		picGameObject.GetComponent<SpriteRenderer> ().sprite = painting.bigSprite;
 		picGameObject.transform.rotation = Quaternion.Euler (0, 0, 0); // set bigpicture to always be upright
 		sr = GetComponent<SpriteRenderer> ();
 	}
@@ -22,10 +22,10 @@ public class Picture : MonoBehaviour {
 		picGameObject.GetComponent<SpriteRenderer> ().enabled = state;
 	}
 
-	public Sprite GrabPicture ()
+	public Painting GrabPicture ()
 	{
 		sr.enabled = !sr.enabled; // Toggle the sprite display state
-		return picSprite;
+		return painting;
 	}
 
 	void OnTriggerEnter2D (Collider2D col)
