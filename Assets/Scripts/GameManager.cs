@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
 	public static GameManager instance = null;
-	public Scene officeLevel; // return to office after each museum attempt
+
 	public Museum[] levels; // stores array of Museum data containers with info on each level (museum) to load
 	public Text highScoreText;
 	[HideInInspector]
@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
 	{
 		if (instance == null) // check if instance already exists
 		{
-			intance = this; // if not, set instance to this
+			instance = this; // if not, set instance to this
 		}
 		else if (instance != this) // if it already exists and it's not this
 		{
@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
 		// load high score
 		int highScore = LoadHighScore ();
 		// set high score text
-		highScoreText.text = highScore.ToString ("C");
+		highScoreText.text = highScore.ToString ("C0");
 	}
 	
 	int LoadHighScore ()
@@ -63,13 +63,13 @@ public class GameManager : MonoBehaviour
 	
 	public void GoToOffice ()
 	{
-		SceneManager.LoadScene (officeLevel.buildIndex);
+		SceneManager.LoadScene ("Levels/Office");
 	}
 	
 	public int CollectPoints ()
 	{
 		int points;
-		int index = IndexOf (levels [museumIndex].picsToSteal, carriedPainting);
+		int index = System.Array.IndexOf (levels [museumIndex].picsToSteal, carriedPainting);
 		if (index == -1)
 		{
 			points = Random.Range (1, 6) * 50; // gives score bet 50 and 300
@@ -86,7 +86,7 @@ public class GameManager : MonoBehaviour
 	{
 		if (museumIndex >= levels.Length)
 		{
-			SceneManagement.LoadScene ("Level_TBC"); // load to be contined
+			SceneManager.LoadScene ("Levels/Level_TBC"); // load to be contined
 		}
 		else
 		{

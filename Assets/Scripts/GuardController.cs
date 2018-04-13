@@ -35,6 +35,12 @@ public class GuardController : MonoBehaviour
 	Behavior prevState;
 	bool facingRight = true;
 	GameObject player;
+	GameManager gm;
+
+	void Awake ()
+	{
+		gm = Object.FindObjectOfType<GameManager> ();
+	}
 
 	// Use this for initialization
 	void Start ()
@@ -245,7 +251,7 @@ public class GuardController : MonoBehaviour
 			float dist = Vector2.Distance (moveTo, (Vector2)transform.position);
 			if (Vector2.Distance ((Vector2)player.transform.position, (Vector2)transform.position) < captureDist)
 			{
-				GameManager.GameOver (); // TODO Add additional checks for player caught outside Chase state.
+				gm.GameOver (); // TODO Add additional checks for player caught outside Chase state.
 			}
 			else if (dist < captureDist)
 			{

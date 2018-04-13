@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [CreateAssetMenu (fileName = "Museum_01", menuName = "Museum")]
 public class Museum : ScriptableObject

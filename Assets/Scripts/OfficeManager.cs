@@ -4,61 +4,49 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
-public static class OfficeManager : MonoBehaviour
+public class OfficeManager : MonoBehaviour
 {
 	public Image fadeImage;
 	public Text scoreText;
-	public GameObject howToPlayGO;
-	public GameObject toolsGO;
-	public GameObject paintingGO;
-	public GameObject heistGO;
 	public GameObject phone;
-	[HideInInspector]
-	public static clickItem;
-	
-	static enum Clickable
+
+	GameManager gm;
+
+	void Awake ()
 	{
-		None,
-		HowToPlay,
-		Heist,
-		GoToMuseum,
-		Flashlight,
-		Mask,
-		Painting
+		gm = Object.FindObjectOfType<GameManager> ();
 	}
-	
+
 	void Start ()
 	{
-		clickItem = Clickable.None;
-		scoreText.text = GameManager.score.ToString ("C");
+		scoreText.text = gm.score.ToString ("C0");
+
+		// set the fadeimage to active and alpha 1
+		fadeImage.gameObject.SetActive (true);
+		Color c = fadeImage.color;
+		c.a = 1f;
+		fadeImage.color = c;
 		
-		StartCoroutine (FadeIn);
+		StartCoroutine ("FadeIn");
 	}
-	
-	void Update ()
-	{
-		if (Input.GetMouseButtonDown (0))
-		{
-			ClickHandler ();
-		}
-	}
-	
+
 	IEnumerator FadeIn ()
 	{
-		Tween fadeIn = fadeImage.DOFade (1f, 2f); // fade alpha to 1 in 2s;
+		Tween fadeIn = fadeImage.DOFade (0f, 2f); // fade alpha to 0 in 2s;
 		yield return fadeIn.WaitForCompletion ();
 		EnteredOffice ();
 	}
 	
 	void EnteredOffice ()
 	{
-		if (!GameManager.levelStarted)
+		if (!gm.levelStarted)
 		{
+			Debug.Log ("Level not started. Show phone.");
 			// show phone with new painting to steal msgs
 		}
 		else
 		{
-			if (GameManager.carriedPainting == null) // player didn't grab a painting
+			if (gm.carriedPainting == null) // player didn't grab a painting
 			{
 				Debug.Log ("You forgot to grab the painting!");
 				// show phone with msg saying you forgot to grab a painting
@@ -67,8 +55,8 @@ public static class OfficeManager : MonoBehaviour
 			}
 			else // player grabbed a painting
 			{
-				int points = GameManager.CollectPoints ();
-				string dollars = points.ToString ("C");
+				int points = gm.CollectPoints ();
+				string dollars = points.ToString ("C0");
 				if (points < 500) // player grabbed wrong painting
 				{
 					Debug.Log ("Oops. You got " + dollars);
@@ -92,44 +80,10 @@ public static class OfficeManager : MonoBehaviour
 		
 	}
 	
-	void ClickHandler ()
-	{
-		switch (clickItem)
-		{
-			case Clickable.None:
-				break; // do nothing
-			case Clickable.ToggleHowToPlay:
-				ToggleImage (howToPlayGO);
-				break;
-			case Clickable.Hesit:
-				ToggleImage (heistGO);
-				break;
-			case Clickable.GoToMuseum:
-				StartCoroutine (GoToMuseum);
-				break;
-			case Clickable.Flashlight:
-				ToggleImage (toolsGO);
-				break;
-			case Clickable.Mask ();
-				ToggleImage (toolsGO);
-				break;
-			case Clickable.Painting:
-				ToggleImage (paintingGO);
-				break;
-		}
-	}
-	
-	void ToggleImage (GameObject img)
-	{
-		SpriteRenderer sr = img.GetComponent<SpriteRenderer> ();
-		float toAlpha = sr.color.alpha < 1 ? 1f : 0f;
-		sr.DOFade (toAlpha, 1f);
-	}
-	
 	IEnumerator GoToMuseum ()
 	{
 		Tween fadeOut = fadeImage.DOFade (0f, 1f); // fade alpha to 0 in 1s
 		yield return fadeOut.WaitForCompletion ();
-		GameManager.GoToMuseum ();
+		gm.GoToMuseum ();
 	}
 }
