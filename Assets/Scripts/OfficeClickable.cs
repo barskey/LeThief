@@ -6,11 +6,12 @@ using DG.Tweening;
 public class OfficeClickable : MonoBehaviour {
 
 	public GameObject gameObjectToShow;
+	public bool isMap = false;
 
 	OfficeManager om;
 	
 	Light highlight;
-	MeshRenderer mr;
+	MeshRenderer mr; // renders text description
 
 	void Awake ()
 	{
@@ -27,30 +28,32 @@ public class OfficeClickable : MonoBehaviour {
 			gameObjectToShow.SetActive (false);
 		}
 	}
-
+	
 	void OnMouseDown ()
 	{
-		ToggleImage ();
+		if (isMap)
+		{
+			om.StartCoroutine ("GoToMuseum");
+		}
 	}
 
 	void OnMouseOver ()
 	{
 		highlight.enabled = true;
 		mr.enabled = true;
+		if (gameObjectToShow != null)
+		{
+			gameObjectToShow.SetActive (true);
+		}
 	}
 
 	void OnMouseExit ()
 	{
 		highlight.enabled = false;
 		mr.enabled = false;
-	}
-		
-	void ToggleImage ()
-	{
 		if (gameObjectToShow != null)
 		{
-			gameObjectToShow.SetActive (!gameObjectToShow.activeSelf);
+			gameObjectToShow.SetActive (false);
 		}
 	}
-
 }

@@ -8,7 +8,7 @@ public class OfficeManager : MonoBehaviour
 {
 	public Image fadeImage;
 	public Text scoreText;
-	public GameObject phone;
+	public PhoneController phone;
 
 	GameManager gm;
 
@@ -50,8 +50,6 @@ public class OfficeManager : MonoBehaviour
 			{
 				Debug.Log ("You forgot to grab the painting!");
 				// show phone with msg saying you forgot to grab a painting
-				// wait for phone to close (be clicked)
-				// GameManager.GoToMuseum ();
 			}
 			else // player grabbed a painting
 			{
@@ -61,23 +59,18 @@ public class OfficeManager : MonoBehaviour
 				{
 					Debug.Log ("Oops. You got " + dollars);
 					// show phone with msg that you grabbed the wrong painting
-					// wait for phone to close (be clicked)
+					// wait for phone to close (clicked)
 					// GameManager.NextLevel ();
 				}
 				else
 				{
 					Debug.Log ("Yay. You got " + dollars);
 					// show phone with msg that you grabbed the correct painting
-					// wait for phone to close (be clicked)
+					// wait for phone to close (clicked)
 					// GameManager.NextLevel ();
 				}
 			}
 		}
-	}
-	
-	void TogglePhone ()
-	{
-		
 	}
 	
 	IEnumerator GoToMuseum ()
