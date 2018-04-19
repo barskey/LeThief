@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-public class OfficeClickable : MonoBehaviour {
+public class OfficeItem : MonoBehaviour {
 
 	public GameObject gameObjectToShow;
 	public bool isMap = false;
 
 	OfficeManager om;
-	
+
 	Light highlight;
 	MeshRenderer mr; // renders text description
 
@@ -31,7 +31,7 @@ public class OfficeClickable : MonoBehaviour {
 	
 	void OnMouseDown ()
 	{
-		if (isMap)
+		if (isMap && !om.phone.onScreen)
 		{
 			om.StartCoroutine ("GoToMuseum");
 		}
@@ -39,11 +39,15 @@ public class OfficeClickable : MonoBehaviour {
 
 	void OnMouseOver ()
 	{
-		highlight.enabled = true;
-		mr.enabled = true;
-		if (gameObjectToShow != null)
+		if (!om.phone.onScreen)
 		{
-			gameObjectToShow.SetActive (true);
+			highlight.enabled = true;
+			mr.enabled = true;
+
+			if (gameObjectToShow != null)
+			{
+				gameObjectToShow.SetActive (true);
+			}
 		}
 	}
 

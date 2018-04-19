@@ -219,7 +219,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d5dd1bcf95de494e98b8ad8f0dc89e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levels: []
+  levels:
+  - {fileID: 11400000, guid: f729acd6a04414e22a3c70e4a6ef1664, type: 2}
   highScoreText: {fileID: 880493182}
   carriedPainting: {fileID: 0}
   score: 0

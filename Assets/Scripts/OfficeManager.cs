@@ -42,7 +42,14 @@ public class OfficeManager : MonoBehaviour
 		if (!gm.levelStarted)
 		{
 			Debug.Log ("Level not started. Show phone.");
+			Museum currentLevel = gm.GetCurrentLevel ();
+
+			phone.onScreen = true; // disable all office item elements
+
 			// show phone with new painting to steal msgs
+			phone.SetMsgs (currentLevel.newHeistMsgs);
+			phone.SlideIn (); // slide in the phone
+			Invoke ("ShowMsgs", 2f); // animate text messages after a delay TODO get rid of invoke
 		}
 		else
 		{
@@ -71,6 +78,11 @@ public class OfficeManager : MonoBehaviour
 				}
 			}
 		}
+	}
+
+	void ShowMsgs ()
+	{
+		phone.SlideMsgs (); // TODO change this magic number to property
 	}
 	
 	IEnumerator GoToMuseum ()

@@ -102,6 +102,11 @@ public class GameManager : MonoBehaviour
 		museumIndex++;
 		GoToOffice ();
 	}
+
+	public Museum GetCurrentLevel ()
+	{
+		return levels [museumIndex];
+	}
 	
 	public void GameOver ()
 	{
