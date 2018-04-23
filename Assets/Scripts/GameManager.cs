@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
 {
 	public static GameManager instance = null;
 
-	public Museum[] levels; // stores array of Museum data containers with info on each level (museum) to load
+	public Museum[] museums; // stores array of Museum data containers with info on each level (museum) to load
 	public Text highScoreText;
 	[HideInInspector]
 	public Painting carriedPainting;
@@ -69,14 +69,16 @@ public class GameManager : MonoBehaviour
 	public int CollectPoints ()
 	{
 		int points;
-		int index = System.Array.IndexOf (levels [museumIndex].picsToSteal, carriedPainting);
-		if (index == -1)
+
+		// if carried painting is in array of pics to steal
+		int index = System.Array.IndexOf (museums [museumIndex].picsToSteal, carriedPainting);
+		if (index == -1) // index not found
 		{
 			points = Random.Range (1, 6) * 50; // gives score bet 50 and 300
 		}
 		else
 		{
-			points = levels [museumIndex].pointsToSteal [index];
+			points = museums [museumIndex].pointsToSteal [index];
 		}
 		score += points;
 		return points;
@@ -84,14 +86,15 @@ public class GameManager : MonoBehaviour
 	
 	public void GoToMuseum ()
 	{
-		if (museumIndex >= levels.Length)
+		if (museumIndex >= museums.Length)
 		{
-			SceneManager.LoadScene ("Levels/Level_TBC"); // load to be contined
+			Debug.Log ("No more levels. To Be continued.");
+			//SceneManager.LoadScene ("Levels/Level_TBC"); // load to be contined
 		}
 		else
 		{
 			levelStarted = true;
-			SceneManager.LoadScene (levels [museumIndex].level.buildIndex);
+			SceneManager.LoadScene ("Levels/" + museums [museumIndex].level);
 		}
 	}
 	
@@ -105,7 +108,7 @@ public class GameManager : MonoBehaviour
 
 	public Museum GetCurrentLevel ()
 	{
-		return levels [museumIndex];
+		return museums [museumIndex];
 	}
 	
 	public void GameOver ()

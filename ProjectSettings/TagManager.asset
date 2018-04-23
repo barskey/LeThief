@@ -7,6 +7,7 @@ TagManager:
   - Picture
   - Canvas
   - Phone
+  - Ceiling
   layers:
   - Default
   - TransparentFX
@@ -23,8 +24,8 @@ TagManager:
   - Guard
   - Picture
   - Walls
-  - 
-  - 
+  - Door
+  - Floor
   - 
   - 
   - 
