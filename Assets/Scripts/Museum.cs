@@ -14,5 +14,6 @@ public class Museum : ScriptableObject
 	public string[] newHeistMsgs; // text messages - first 3 are client, 4 is jacques
 	public string[] forgotItMsgs;
 	public string[] gotItMsgs;
+	public string[] wrongOneMsgs;
 	
 }

@@ -65,19 +65,33 @@ public class GameManager : MonoBehaviour
 	{
 		SceneManager.LoadScene ("Levels/Office");
 	}
+
+	public bool CheckPainting ()
+	{
+		// if carried painting is in array of pics to steal
+		int index = System.Array.IndexOf (museums [museumIndex].picsToSteal, carriedPainting);
+		if (index == -1) // index not found
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+
+	}
 	
 	public int CollectPoints ()
 	{
 		int points;
 
-		// if carried painting is in array of pics to steal
-		int index = System.Array.IndexOf (museums [museumIndex].picsToSteal, carriedPainting);
-		if (index == -1) // index not found
+		if (!CheckPainting ()) // wrong painting
 		{
 			points = Random.Range (1, 6) * 50; // gives score bet 50 and 300
 		}
 		else
 		{
+			int index = System.Array.IndexOf (museums [museumIndex].picsToSteal, carriedPainting);
 			points = museums [museumIndex].pointsToSteal [index];
 		}
 		score += points;

@@ -14,14 +14,14 @@ public class OfficeManager : MonoBehaviour
 	int currentScore;
 	int displayedScore;
 
-	enum PlayerStatus
+	enum PaintingStatus
 	{
-		DoNothing,
+		None,
 		GotCorrectOne,
 		GotWrongOne
 	}
 
-	PlayerStatus status = PlayerStatus.DoNothing;
+	PaintingStatus status = PaintingStatus.None;
 
 	void Awake ()
 	{
@@ -31,7 +31,8 @@ public class OfficeManager : MonoBehaviour
 	void Start ()
 	{
 		currentScore = gm.score;
-		scoreText.text = currentScore.ToString ("C0");
+		displayedScore = currentScore;
+		scoreText.text = displayedScore.ToString ("C0");
 
 		// set the fadeimage to active and alpha 1
 		fadeImage.gameObject.SetActive (true);
@@ -64,7 +65,7 @@ public class OfficeManager : MonoBehaviour
 			phone.onScreen = true; // disable all office item elements
 
 			// show phone with new painting to steal msgs
-			status = PlayerStatus.DoNothing; // for determining what to do in phonecallback
+			status = PaintingStatus.None; // for determining what to do in phonecallback
 			phone.SetMsgs (currentLevel.newHeistMsgs);
 			phone.SlideIn (); // slide in the phone and show the text messages
 		}
@@ -73,36 +74,29 @@ public class OfficeManager : MonoBehaviour
 			if (gm.carriedPainting == null) // player didn't grab a painting
 			{
 				Debug.Log ("You forgot to grab the painting!");
-				Museum currentLevel = gm.GetCurrentLevel ();
 
 				// show phone with new painting to steal msgs
-				status = PlayerStatus.DoNothing; // for determining what to do in phonecallback
-				phone.SetMsgs (currentLevel.forgotItMsgs);
+				status = PaintingStatus.None; // for determining what to do in phonecallback
+				phone.SetMsgs (gm.GetCurrentLevel ().forgotItMsgs);
 				phone.SlideIn (); // slide in the phone and show the text messages
 			}
 			else // player grabbed a painting
 			{
-				int points = gm.CollectPoints ();
-				AddScore (points);
-				string dollars = points.ToString ("C0");
-				if (points < 500) // player grabbed wrong painting
+				if (!gm.CheckPainting ()) // player grabbed wrong painting
 				{
-					Debug.Log ("Oops. You got " + dollars);
-					status = PlayerStatus.GotWrongOne; // for determining what to do in phonecallback
-					// show phone with msg that you grabbed the wrong painting
-					// wait for phone to close (clicked)
-					// GameManager.NextLevel ();
+					Debug.Log ("Oops. You got wrong one.");
+					status = PaintingStatus.GotWrongOne; // for determining what to do in phonecallback
+					phone.SetMsgs (gm.GetCurrentLevel ().wrongOneMsgs);
+					phone.SlideIn (); // slide in the phone and show the text messages
 				}
 				else
 				{
-					Debug.Log ("Yay. You got " + dollars);
-					Museum currentLevel = gm.GetCurrentLevel ();
+					Debug.Log ("Yay. You got the right one!");
 
 					// show phone with msgs that you got it
-					status = PlayerStatus.GotCorrectOne; // for determining what to do in phonecallback
-					phone.SetMsgs (currentLevel.gotItMsgs);
+					status = PaintingStatus.GotCorrectOne; // for determining what to do in phonecallback
+					phone.SetMsgs (gm.GetCurrentLevel ().gotItMsgs);
 					phone.SlideIn (); // slide in the phone and show the text messages
-					//GameManager.NextLevel ();
 				}
 			}
 		}
@@ -118,30 +112,21 @@ public class OfficeManager : MonoBehaviour
 	// called from office manager after phone has displayed text msgs and slides offscreen
 	public void PhoneCallback ()
 	{
-		int points = gm.CollectPoints ();
-		AddScore (points);
-		if (points < 500) // player grabbed wrong painting
+		if (status != PaintingStatus.None)
 		{
-			Debug.Log ("Oops. You got " + points.ToString() + " bucks.");
-			// show phone with msg that you grabbed the wrong painting
-			// wait for phone to close (clicked)
-			// GameManager.NextLevel ();
+			AddScore (gm.CollectPoints ());
 		}
-		else
-		{
-			Debug.Log ("Yay. You got " + points.ToString() + " bucks.");
-			Museum currentLevel = gm.GetCurrentLevel ();
+	}
 
-			// show phone with msgs that you got it
-			phone.SetMsgs (currentLevel.gotItMsgs);
-			phone.SlideIn (); // slide in the phone and show the text messages
-			//GameManager.NextLevel ();
-		}
+	void NextLevel ()
+	{
+		gm.NextLevel ();
 	}
 
 	void AddScore(int points)
 	{
 		currentScore += points;
-		DOTween.To (() => displayedScore, x => displayedScore = x, currentScore, 1);
+		DOTween.To (() => displayedScore, x => displayedScore = x, currentScore, 1).OnComplete (NextLevel);
+		//scoreText.rectTransform.DOPunchScale (new Vector3 (1.1f, 1.1f, 1f), 1f, 1); // doesn't look right yet
 	}
 }

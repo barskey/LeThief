@@ -32,7 +32,6 @@ public class PlayerController : MonoBehaviour
 		anim = GetComponent<Animator> ();
 		sr = GetComponent<SpriteRenderer> ();
 		picSr = transform.Find ("Pic").GetComponent<SpriteRenderer> ();
-		Debug.Log (picSr);
 		flashlight = GetComponentInChildren<Flashlight> ();
 
 		speed = runSpeed; // start out in run mode

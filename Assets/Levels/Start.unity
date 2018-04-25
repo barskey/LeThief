@@ -221,6 +221,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   museums:
   - {fileID: 11400000, guid: f729acd6a04414e22a3c70e4a6ef1664, type: 2}
+  - {fileID: 11400000, guid: 2fe50540cade146c9969a79a9b0c445d, type: 2}
   highScoreText: {fileID: 880493182}
   carriedPainting: {fileID: 0}
   score: 0

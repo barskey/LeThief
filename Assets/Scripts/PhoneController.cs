@@ -90,6 +90,7 @@ public class PhoneController : MonoBehaviour
 		}
 		ShowClickText (false);
 		onScreen = false;
+		om.PhoneCallback ();
 	}
 
 	void ShowClickText (bool state)
