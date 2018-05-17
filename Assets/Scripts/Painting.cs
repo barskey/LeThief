@@ -6,6 +6,7 @@ using UnityEngine;
 public class Painting : ScriptableObject
 {
 	public new string name = "Picture Title"; // used for scoring; make sure this is unique
-	public Sprite bigSprite; // for showing when flashlight is over
+	public Sprite smSprite; // for showing when flashlight is over
+	public Sprite bigSprite; // for Heist poster in Office
 	
 }

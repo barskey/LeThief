@@ -12,8 +12,8 @@ public class Picture : MonoBehaviour
 
 	void Start ()
 	{
-		picGameObject.GetComponent<SpriteRenderer> ().sprite = painting.bigSprite;
-		picGameObject.transform.rotation = Quaternion.Euler (0, 0, 0); // set bigpicture to always be upright
+		picGameObject.GetComponent<SpriteRenderer> ().sprite = painting.smSprite;
+		picGameObject.transform.rotation = Quaternion.Euler (0, 0, 0); // set picture to always be upright
 		sr = GetComponent<SpriteRenderer> ();
 	}
 

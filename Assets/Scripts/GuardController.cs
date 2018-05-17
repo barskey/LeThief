@@ -37,6 +37,20 @@ public class GuardController : MonoBehaviour
 	GameObject player;
 	GameManager gm;
 
+	// Patrol State properties
+	int patrolIndex = 0;
+	Vector2 moveTo;
+
+	// Alert State properties
+	Vector2 lastPosition;
+	Sequence lookSeq;
+	float hearTimer; // used in case player is running while guard is searching, so he doesnt get all wonky while resetting
+	float hearCooldown = 0.5f;
+	bool alert;
+
+	// Chase State properties
+	float waited;
+
 	void Awake ()
 	{
 		gm = Object.FindObjectOfType<GameManager> ();
@@ -113,12 +127,12 @@ public class GuardController : MonoBehaviour
 		}
 	}
 
-	int patrolIndex = 0;
-	Vector2 moveTo;
 	void PatrolEnter ()
 	{
-		Debug.Log ("PatrolEnter");
+		//Debug.Log ("PatrolEnter");
 		prevState = Behavior.patrol;
+
+		alert = false;
 
 		emote.enabled = false; // hide emote above head
 
@@ -143,11 +157,17 @@ public class GuardController : MonoBehaviour
 		}
 		else if (dist < 0.01f) // if guard has reached patrol point
 		{
+			if (points [patrolIndex].GetComponent<PatrolPoint> ().searchAtThisPoint) // if guard shoule search at this patrol point
+			{
+				guardState = Behavior.alert; // switch to alert state so guard looks around
+			} // note this condition is checked before setting to next patrol point
+
 			patrolIndex++; // get next point index
 			if (patrolIndex >= points.Length) // reset index to first point if at the end
 			{
 				patrolIndex = 0;
 			}
+
 			moveTo = (Vector2)points [patrolIndex].position; // update destination vector
 		}
 
@@ -155,11 +175,6 @@ public class GuardController : MonoBehaviour
 
 		prevState = Behavior.patrol;
 	}
-
-	Vector2 lastPosition;
-	Sequence lookSeq;
-	float hearTimer; // used in case player is running while guard is searching, so he doesnt get all wonky while resetting
-	float hearCooldown = 0.5f;
 
 	void AlertEnter ()
 	{
@@ -170,9 +185,16 @@ public class GuardController : MonoBehaviour
 		rb2d.velocity = Vector2.zero;
 		anim.SetFloat ("speed", 0);
 
-		// set question mark above head
-		emote.sprite = alertEmote;
-		emote.enabled = true;
+		if (alert)
+		{
+			// set question mark above head
+			emote.sprite = alertEmote;
+			emote.enabled = true;
+		}
+		else
+		{
+			emote.enabled = false;
+		}
 
 		hearTimer = 0f;
 
@@ -211,7 +233,6 @@ public class GuardController : MonoBehaviour
 		hearTimer += Time.deltaTime;
 	}
 	
-	float waited;
 	void ChaseEnter ()
 	{
 		prevState = Behavior.chase;
@@ -285,6 +306,7 @@ public class GuardController : MonoBehaviour
 			if (!hit) // no walls in the way
 			{
 				//Debug.Log ("I see you!");
+				alert = true;
 				return true;
 			}
 		}
@@ -301,6 +323,7 @@ public class GuardController : MonoBehaviour
 			PlayerController pc = col.GetComponent<PlayerController> ();
 			if (pc != null) { // if we have a valid playercontroller
 				if (pc.running) { // if player is running, hence making noise
+					alert = true;
 					return true;
 				}
 			}
@@ -345,10 +368,20 @@ public class GuardController : MonoBehaviour
 
 	Sequence BuildLookSequence (Vector2 lastPosition)
 	{
-		// guard will look in direction he heard sound, then scan around looking for player. Using random values to make it
+		// guard will look in set direction, then scan around looking for player. Using random values to make it
 		// look like guard is searching erratically.
 
-		Vector3 playerVector = (Vector3)lastPosition - transform.position; // create vector to player position
+		Vector3 lookVector;
+
+		// use player position if guard is alert, otherwise use position of next patrol point
+		if (alert)
+		{
+			lookVector = (Vector3)lastPosition - transform.position; // vector to player position
+		}
+		else
+		{
+			lookVector = (Vector3)moveTo; // vector to next patrol point
+		}
 
 		// set up look sequence for panning back and forth
 		Sequence seq = DOTween.Sequence ();
@@ -359,17 +392,17 @@ public class GuardController : MonoBehaviour
 		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
 
 		// create new vector3 rotated by random amount
-		Vector3 newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		Vector3 newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * lookVector;
 		seq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
 		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
 
 		// make another rotated vector by random amount
-		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * lookVector;
 		seq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
 		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
 
 		// make another rotated vector by random amount
-		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * playerVector;
+		newRotate = Quaternion.AngleAxis (Random.Range (-seeAngleHalf, seeAngleHalf), -Vector3.forward) * lookVector;
 		seq.Append (flashlight.transform.DOLookAt (newRotate, Random.Range (0.2f, 1f))); // add to sequence
 		seq.AppendInterval (Random.Range (0.2f, 1f)); // add random length pause
 

@@ -11,5 +11,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 183828514707a46a6831aad7317a91ad, type: 3}
   m_Name: New Pic
   m_EditorClassIdentifier: 
-  name: Picture1
-  bigSprite: {fileID: 21300000, guid: d8e6019cc4e7d4d42b3c35e6668ac05a, type: 3}
+  name: Self Portrait
+  smSprite: {fileID: 21300000, guid: d8e6019cc4e7d4d42b3c35e6668ac05a, type: 3}
+  bigSprite: {fileID: 21300000, guid: 12e191192f18b4d64bca691fd8f6c36c, type: 3}

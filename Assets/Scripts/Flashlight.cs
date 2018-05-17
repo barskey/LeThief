@@ -4,14 +4,17 @@ using UnityEngine;
 
 public class Flashlight : MonoBehaviour {
 
+	public AudioClip click;
 	[HideInInspector]
 	public Light lightComp;
+	AudioSource aud;
 
 	public bool isOn = false; // convenience for player/guard to check state
 
 	void Awake ()
 	{
 		lightComp = GetComponent<Light> ();
+		aud = GetComponent<AudioSource> ();
 	}
 
 	public void ToggleLight ()
@@ -19,7 +22,7 @@ public class Flashlight : MonoBehaviour {
 		isOn = !isOn;
 		lightComp.enabled = isOn;
 
-		// TODO play click sound
+		aud.Play ();
 	}
 
 	public void SetDirection (Vector2 dir)

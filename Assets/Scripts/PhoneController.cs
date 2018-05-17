@@ -10,14 +10,13 @@ public class PhoneController : MonoBehaviour
 	public float[] msgYPositions;
 	public float slideInSecs = 0.5f;
 	public Text clickText;
-	[HideInInspector]
-	public bool onScreen = false;
 
 	OfficeManager om;
 	float offsetX;
 	int msgCount;
 	Vector3[] msgStartPos;
 	bool msgsDone = true;
+	public bool onScreen = false;
 
 	void Awake ()
 	{
@@ -71,7 +70,7 @@ public class PhoneController : MonoBehaviour
 		{
 			GameObject bubble = msgBubbles [i];
 			// first delay is shorter than other delay times
-			float waitSecs = i == 0 ? Random.Range (0.5f, 1.5f) : Random.Range (1f, 3f);
+			float waitSecs = i == 0 ? Random.Range (0.5f, 1.5f) : Random.Range (1f, 2.5f);
 			seq.AppendInterval (waitSecs);
 			seq.AppendCallback (()=>ShowBubble (bubble, true));
 			seq.Append (msgBubbles[i].transform.DOLocalMoveY (msgYPositions[i], 0.5f).SetEase (Ease.OutBack));
@@ -90,7 +89,7 @@ public class PhoneController : MonoBehaviour
 		}
 		ShowClickText (false);
 		onScreen = false;
-		om.PhoneCallback ();
+		om.AfterPhoneSlideOut ();
 	}
 
 	void ShowClickText (bool state)

@@ -225,7 +225,12 @@ MonoBehaviour:
   highScoreText: {fileID: 880493182}
   carriedPainting: {fileID: 0}
   score: 0
-  levelStarted: 0
+  newLevelTexts:
+  - Another day, another dollar.
+  - Some time later...
+  - A few minutes later...
+  newLevelText: 
+  levelState: 0
 --- !u!4 &463363923
 Transform:
   m_ObjectHideFlags: 0

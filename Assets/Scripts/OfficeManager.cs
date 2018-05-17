@@ -8,20 +8,18 @@ public class OfficeManager : MonoBehaviour
 {
 	public Image fadeImage;
 	public Text scoreText;
+	public Text levelText;
 	public PhoneController phone;
+	public OfficeItem heistInfo;
+	public HeistPoster heistPoster;
+	public OfficeItem map;
+	public OfficeItem howToPlay;
+	public OfficeItem deskPhone;
+	public OfficeItem[] otherItems;
 
 	GameManager gm;
 	int currentScore;
 	int displayedScore;
-
-	enum PaintingStatus
-	{
-		None,
-		GotCorrectOne,
-		GotWrongOne
-	}
-
-	PaintingStatus status = PaintingStatus.None;
 
 	void Awake ()
 	{
@@ -39,66 +37,58 @@ public class OfficeManager : MonoBehaviour
 		Color c = fadeImage.color;
 		c.a = 1f;
 		fadeImage.color = c;
-		
-		StartCoroutine ("FadeIn");
+
+		PlayLevelText ();
 	}
 
 	void Update ()
 	{
 		scoreText.text = displayedScore.ToString ("C0");
 	}
-		
-	IEnumerator FadeIn ()
+
+	void PlayLevelText ()
 	{
-		Tween fadeIn = fadeImage.DOFade (0f, 2f); // fade alpha to 0 in 2s;
-		yield return fadeIn.WaitForCompletion ();
-		EnteredOffice ();
+		// TODO Make a sequence that will fade out at the end
+		Sequence seq = DOTween.Sequence ();
+		seq.Append (levelText.DOText (gm.newLevelText, 3f, false));
+		Color fadeToColor = levelText.color;
+		fadeToColor.a = 0f;
+		seq.Append (DOTween.To (() => levelText.color, x => levelText.color = x, fadeToColor, 0.5f));
+		seq.AppendCallback (()=>FadeIn());
+		seq.Play ();
+	}
+		
+	void FadeIn ()
+	{
+		fadeImage.DOFade (0f, 2f).OnComplete (EnterOffice); // fade alpha to 0 in 2s;
 	}
 	
-	void EnteredOffice ()
+	void EnterOffice ()
 	{
-		if (!gm.levelStarted)
+		heistPoster.UpdateInfo (gm.GetCurrentLevel ().picToSteal, gm.GetCurrentLevel ().pointsToSteal);
+
+		howToPlay.TurnOn ();
+		deskPhone.TurnOn ();
+		deskPhone.Pulse ();
+
+		switch (gm.levelState)
 		{
-			Debug.Log ("Level not started. Show phone.");
-			Museum currentLevel = gm.GetCurrentLevel ();
-
-			phone.onScreen = true; // disable all office item elements
-
-			// show phone with new painting to steal msgs
-			status = PaintingStatus.None; // for determining what to do in phonecallback
-			phone.SetMsgs (currentLevel.newHeistMsgs);
-			phone.SlideIn (); // slide in the phone and show the text messages
-		}
-		else
-		{
-			if (gm.carriedPainting == null) // player didn't grab a painting
-			{
-				Debug.Log ("You forgot to grab the painting!");
-
-				// show phone with new painting to steal msgs
-				status = PaintingStatus.None; // for determining what to do in phonecallback
-				phone.SetMsgs (gm.GetCurrentLevel ().forgotItMsgs);
-				phone.SlideIn (); // slide in the phone and show the text messages
-			}
-			else // player grabbed a painting
-			{
-				if (!gm.CheckPainting ()) // player grabbed wrong painting
-				{
-					Debug.Log ("Oops. You got wrong one.");
-					status = PaintingStatus.GotWrongOne; // for determining what to do in phonecallback
-					phone.SetMsgs (gm.GetCurrentLevel ().wrongOneMsgs);
-					phone.SlideIn (); // slide in the phone and show the text messages
-				}
-				else
-				{
-					Debug.Log ("Yay. You got the right one!");
-
-					// show phone with msgs that you got it
-					status = PaintingStatus.GotCorrectOne; // for determining what to do in phonecallback
-					phone.SetMsgs (gm.GetCurrentLevel ().gotItMsgs);
-					phone.SlideIn (); // slide in the phone and show the text messages
-				}
-			}
+		case GameManager.LevelState.NewGame:
+			phone.SetMsgs (gm.GetCurrentLevel ().newHeistMsgs);
+			howToPlay.Pulse ();
+			break;
+		case GameManager.LevelState.NewLevel:
+			phone.SetMsgs (gm.GetCurrentLevel ().newHeistMsgs);
+			break;
+		case GameManager.LevelState.ForgotPainting:
+			phone.SetMsgs (gm.GetCurrentLevel ().forgotItMsgs);
+			break;
+		case GameManager.LevelState.WrongPainting:
+			phone.SetMsgs (gm.GetCurrentLevel ().wrongOneMsgs);
+			break;
+		case GameManager.LevelState.RightPainting:
+			phone.SetMsgs (gm.GetCurrentLevel ().gotItMsgs);
+			break;
 		}
 	}
 
@@ -110,23 +100,46 @@ public class OfficeManager : MonoBehaviour
 	}
 
 	// called from office manager after phone has displayed text msgs and slides offscreen
-	public void PhoneCallback ()
+	public void AfterPhoneSlideOut ()
 	{
-		if (status != PaintingStatus.None)
+		foreach (OfficeItem item in otherItems)
 		{
-			AddScore (gm.CollectPoints ());
+			item.TurnOn ();
 		}
-	}
 
-	void NextLevel ()
-	{
-		gm.NextLevel ();
+		switch (gm.levelState)
+		{
+		case GameManager.LevelState.NewGame:
+			gm.levelState = GameManager.LevelState.NewLevel;
+			heistInfo.TurnOn ();
+			heistInfo.Pulse ();
+			deskPhone.TurnOff ();
+			break;
+		case GameManager.LevelState.NewLevel:
+			heistInfo.TurnOn ();
+			heistInfo.Pulse ();
+			deskPhone.TurnOff ();
+			break;
+		case GameManager.LevelState.ForgotPainting:
+			heistInfo.TurnOn ();
+			heistInfo.Pulse ();
+			map.TurnOn ();
+			map.Pulse ();
+			deskPhone.TurnOff ();
+			break;
+		case GameManager.LevelState.WrongPainting:
+			AddScore (gm.CollectPoints ());
+			break;
+		case GameManager.LevelState.RightPainting:
+			AddScore (gm.CollectPoints ());
+			break;
+		}
 	}
 
 	void AddScore(int points)
 	{
 		currentScore += points;
-		DOTween.To (() => displayedScore, x => displayedScore = x, currentScore, 1).OnComplete (NextLevel);
+		DOTween.To (() => displayedScore, x => displayedScore = x, currentScore, 1).OnComplete (gm.NextLevel);
 		//scoreText.rectTransform.DOPunchScale (new Vector3 (1.1f, 1.1f, 1f), 1f, 1); // doesn't look right yet
 	}
 }

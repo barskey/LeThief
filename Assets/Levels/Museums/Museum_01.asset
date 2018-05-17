@@ -13,11 +13,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   name: Museum Name
   level: Level_01
-  picsToSteal:
-  - {fileID: 11400000, guid: 5e20bc81ed9d142dd9ea4be3a2764710, type: 2}
-  - {fileID: 11400000, guid: 7967d73adab38440bab91ea256d80e38, type: 2}
-  - {fileID: 11400000, guid: 6509ef7649d6d466094eb71542bbb7fe, type: 2}
-  pointsToSteal: e8030000d0070000b80b0000
+  picToSteal: {fileID: 11400000, guid: 5e20bc81ed9d142dd9ea4be3a2764710, type: 2}
+  pointsToSteal: 1000
   picsInMuseum: []
   newHeistMsgs:
   - I'm looking for a picture.

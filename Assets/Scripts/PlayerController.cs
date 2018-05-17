@@ -140,7 +140,7 @@ public class PlayerController : MonoBehaviour
 	void GotPicture ()
 	{
 		carriedPainting = picController.GrabPicture ();
-		picSr.sprite = 	carriedPainting.bigSprite;
+		picSr.sprite = 	carriedPainting.smSprite;
 		picSr.enabled = true;
 		// TODO tell game object to set alarm
 

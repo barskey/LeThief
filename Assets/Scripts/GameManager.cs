@@ -14,9 +14,21 @@ public class GameManager : MonoBehaviour
 	public Painting carriedPainting;
 	[HideInInspector]
 	public int score = 0;
+	public string[] newLevelTexts;
 	[HideInInspector]
-	public bool levelStarted;
-	
+	public string newLevelText;
+
+	public enum LevelState
+	{
+		NewGame,
+		NewLevel,
+		ForgotPainting,
+		WrongPainting,
+		RightPainting
+	}
+
+	public LevelState levelState;
+
 	private int museumIndex = 0;
 	
 	void Awake ()
@@ -57,26 +69,37 @@ public class GameManager : MonoBehaviour
 		museumIndex = 0;
 		score = 0;
 		carriedPainting = null;
-		levelStarted = false;
+		levelState = LevelState.NewGame;
+		newLevelText = "Meanwhile, at the Office...";
 		GoToOffice ();
 	}
 	
 	public void GoToOffice ()
 	{
+		if (carriedPainting == null)
+		{
+			if (levelState != LevelState.NewGame || levelState != LevelState.NewLevel)
+			{
+				levelState = LevelState.ForgotPainting;
+			}
+		}
+		else
+		{
+			levelState = CheckPainting () ? LevelState.RightPainting : LevelState.WrongPainting;
+		}
+
 		SceneManager.LoadScene ("Levels/Office");
 	}
 
 	public bool CheckPainting ()
 	{
-		// if carried painting is in array of pics to steal
-		int index = System.Array.IndexOf (museums [museumIndex].picsToSteal, carriedPainting);
-		if (index == -1) // index not found
+		if (carriedPainting == museums [museumIndex].picToSteal)
 		{
-			return false;
+			return true;
 		}
 		else
 		{
-			return true;
+			return false;
 		}
 
 	}
@@ -91,8 +114,7 @@ public class GameManager : MonoBehaviour
 		}
 		else
 		{
-			int index = System.Array.IndexOf (museums [museumIndex].picsToSteal, carriedPainting);
-			points = museums [museumIndex].pointsToSteal [index];
+			points = museums [museumIndex].pointsToSteal;
 		}
 		score += points;
 		return points;
@@ -107,16 +129,17 @@ public class GameManager : MonoBehaviour
 		}
 		else
 		{
-			levelStarted = true;
 			SceneManager.LoadScene ("Levels/" + museums [museumIndex].level);
 		}
 	}
 	
 	public void NextLevel ()
 	{
-		levelStarted = false;
 		carriedPainting = null;
 		museumIndex++;
+		levelState = LevelState.NewLevel;
+		int index = Random.Range (1, newLevelTexts.Length - 1);
+		newLevelText = newLevelTexts [index];
 		GoToOffice ();
 	}
 
